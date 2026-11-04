@@ -23,10 +23,20 @@ if command -v rustup >/dev/null 2>&1; then
   rustup component add llvm-tools-preview 2>/dev/null || true
 fi
 
-git -C "$BUILD_ROOT" apply --check --3way "$PATCH_FILE"
-git -C "$BUILD_ROOT" apply --3way "$PATCH_FILE"
+# --- идемпотентное применение патча ---
+if git -C "$BUILD_ROOT" apply --check --3way "$PATCH_FILE" 2>/dev/null; then
+    echo "applying patch: $(basename "$PATCH_FILE")"
+    git -C "$BUILD_ROOT" apply --3way "$PATCH_FILE"
+elif git -C "$BUILD_ROOT" apply --reverse --check --3way "$PATCH_FILE" 2>/dev/null; then
+    echo "patch already applied: $(basename "$PATCH_FILE")"
+else
+    echo "error: patch neither applies nor is already applied: $PATCH_FILE" >&2
+    git -C "$BUILD_ROOT" apply --check --3way "$PATCH_FILE" >&2 || true
+    exit 1
+fi
+# ---------------------------------------
 
-"$BUILD_ROOT/build-ios.sh"
+bash "$BUILD_ROOT/build-ios.sh"
 
 rm -rf "$ROOT/Vendor/AirCard/AirliftFFI.xcframework"
 cp -R "$BUILD_ROOT/AirliftFFI.xcframework" "$ROOT/Vendor/AirCard/AirliftFFI.xcframework"
