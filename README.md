@@ -86,3 +86,4 @@ On iOS 26.4 and later, legacy Lockdown loopback connections also depend on the p
 ## License
 
 AirBeep is released under the [GNU General Public License v3.0](LICENSE).
+# Airbeep-debug
